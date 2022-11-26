@@ -12,9 +12,10 @@ import (
 )
 
 type TwilioAdapterApp struct {
-	ctx        context.Context
-	client     *twilio.RestClient
-	serviceSID string
+	ctx                 context.Context
+	client              *twilio.RestClient
+	verifyServiceSID    string
+	messagingServiceSID string
 }
 
 /*
@@ -28,19 +29,27 @@ func main() {
 		client: twilio.NewRestClient(),
 	}
 
-	serviceSID := os.Getenv("TWILIO_VERIFY_SERVICE_SID")
-	if serviceSID == "" {
+	verifyServiceSID := os.Getenv("TWILIO_VERIFY_SERVICE_SID")
+	if verifyServiceSID == "" {
 		fmt.Println("Twilio Verification Service SID not found")
 		return
 	}
+	app.verifyServiceSID = verifyServiceSID
 
-	app.serviceSID = serviceSID
+	messagingServiceSID := os.Getenv("TWILIO_MESSAGING_SERVICE")
+	if messagingServiceSID == "" {
+		fmt.Println("Twilio Messaging Service SID not found")
+		return
+	}
+	app.messagingServiceSID = messagingServiceSID
 
 	// app.sendMessage()
 
 	// app.verify()
 
-	app.checkVerificationToken()
+	// app.checkVerificationToken()
+
+	app.sendWithMessagingService()
 }
 
 func (app *TwilioAdapterApp) sendMessage() {
@@ -74,7 +83,7 @@ func (app *TwilioAdapterApp) verify() {
 	params.SetTo(phoneNumberTo)
 	params.SetChannel("sms")
 
-	resp, err := app.client.VerifyV2.CreateVerification(app.serviceSID, params)
+	resp, err := app.client.VerifyV2.CreateVerification(app.verifyServiceSID, params)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -106,7 +115,7 @@ func (app *TwilioAdapterApp) checkVerificationToken() {
 	params.SetTo(phoneNumberTo)
 	params.SetCode(token)
 
-	resp, err := app.client.VerifyV2.CreateVerificationCheck(app.serviceSID, params)
+	resp, err := app.client.VerifyV2.CreateVerificationCheck(app.verifyServiceSID, params)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -116,5 +125,28 @@ func (app *TwilioAdapterApp) checkVerificationToken() {
 		fmt.Println(*resp.Status)
 	} else {
 		fmt.Println(resp.Status)
+	}
+}
+
+func (app *TwilioAdapterApp) sendWithMessagingService() {
+	phoneNumberTo := "+..." // my local phone number
+
+	params := &api.CreateMessageParams{}
+	params.SetBody("Test SMS from Roman with Messaging Service")
+	params.SetMessagingServiceSid(app.messagingServiceSID)
+	params.SetTo(phoneNumberTo)
+
+	resp, err := app.client.Api.CreateMessage(params)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	fmt.Printf("%+v\n", resp)
+
+	if resp.Sid != nil {
+		fmt.Println(*resp.Sid)
+	} else {
+		fmt.Println(resp.Sid)
 	}
 }
