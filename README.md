@@ -1,6 +1,20 @@
 twilio-adapter
 -----
 
+## Environment variables
+
+```
+nano ~/.bash_profile
+
+export TWILIO_ACCOUNT_SID=*******
+export TWILIO_AUTH_TOKEN=*******
+export TWILIO_VERIFY_SERVICE_SID==*******
+
+source ~/.bash_profile
+
+echo $TWILIO_VERIFY_SERVICE_SID
+```
+
 ## Build and run
 
 Run the app:
@@ -16,12 +30,12 @@ go run .\main.go
 
 Enable `app.verify()` and specify `phoneNumberTo` then send vetification code:
 ```
-go run .\main.go
+go run ./main.go
 ```
 
 Comment `app.verify()` and enable `app.checkVerificationToken()` and provide the code your received in SMS:
 ```
-go run .\main.go -t 065729
+go run ./main.go -t 065729
 
 token: 065729
 approved

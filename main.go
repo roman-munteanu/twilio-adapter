@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -36,20 +37,20 @@ func main() {
 	}
 	app.verifyServiceSID = verifyServiceSID
 
-	messagingServiceSID := os.Getenv("TWILIO_MESSAGING_SERVICE")
-	if messagingServiceSID == "" {
-		fmt.Println("Twilio Messaging Service SID not found")
-		return
-	}
-	app.messagingServiceSID = messagingServiceSID
+	// messagingServiceSID := os.Getenv("TWILIO_MESSAGING_SERVICE")
+	// if messagingServiceSID == "" {
+	// 	fmt.Println("Twilio Messaging Service SID not found")
+	// 	return
+	// }
+	// app.messagingServiceSID = messagingServiceSID
 
 	// app.sendMessage()
 
 	// app.verify()
 
-	// app.checkVerificationToken()
+	app.checkVerificationToken()
 
-	app.sendWithMessagingService()
+	// app.sendWithMessagingService()
 }
 
 func (app *TwilioAdapterApp) sendMessage() {
@@ -60,6 +61,7 @@ func (app *TwilioAdapterApp) sendMessage() {
 	params.SetBody("Test SMS from Roman")
 	params.SetFrom(phoneNumberFrom)
 	params.SetTo(phoneNumberTo)
+	// params.StatusCallback("")
 
 	resp, err := app.client.Api.CreateMessage(params)
 	if err != nil {
@@ -82,6 +84,8 @@ func (app *TwilioAdapterApp) verify() {
 	params := &verify.CreateVerificationParams{}
 	params.SetTo(phoneNumberTo)
 	params.SetChannel("sms")
+	params.SetLocale("ro")
+	// params.SetLocale("nonexistent")
 
 	resp, err := app.client.VerifyV2.CreateVerification(app.verifyServiceSID, params)
 	if err != nil {
@@ -89,7 +93,13 @@ func (app *TwilioAdapterApp) verify() {
 		return
 	}
 
-	fmt.Printf("%+v\n", resp)
+	fmt.Println("CreateVerification - response:")
+	respBS, err := json.Marshal(resp)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(string(respBS))
 
 	if resp.Status != nil {
 		fmt.Println(*resp.Status)
@@ -120,6 +130,14 @@ func (app *TwilioAdapterApp) checkVerificationToken() {
 		fmt.Println(err.Error())
 		return
 	}
+
+	fmt.Println("CreateVerificationCheck - response:")
+	respBS, err := json.Marshal(resp)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	fmt.Println(string(respBS))
 
 	if resp.Status != nil {
 		fmt.Println(*resp.Status)
